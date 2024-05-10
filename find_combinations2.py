@@ -58,11 +58,17 @@ def update_table(result_pairs):
     # Insert value pairs into the table
     for index, (gsk, ph) in enumerate(result_pairs):
         print("Debug: update_table - Inserting value pair - Gsk =", gsk, ", Ph =", ph)
-        treeview.insert("", index, values=(f"Gsk: {gsk}", f"Ph: {ph}"))
+        if index % 2 == 0:
+            bg_color = "#FFE0B2"  # Brownish color for Gsk
+        else:
+            bg_color = "#FFCC80"  # Orange color for Ph
+        treeview.insert("", index, values=(gsk, ph), tags=('evenrow' if index % 2 == 0 else 'oddrow'))
+
+    # Center align Ph values
+    treeview.column("#1", anchor="center")  # Center-align Gsk column
+    treeview.column("#2", anchor="center")  # Center-align Ph column
 
     print("Debug: update_table - Table updated")
-
-
 
 def update_grade_boundaries(f, g):
     label_lower_bound.config(text=f"Untergrenze: {f}")
@@ -104,50 +110,70 @@ def update_grade_boundaries_on_entry(*args):
         # If any input field is empty, clear the table
         update_table([])  # Clear the table if inputs are incomplete
 
-
 # GUI initialisieren
 root = tk.Tk()
-root.title("Mein GUI")
+root.title("Abiturnoterechner")
 
-# Eingabefelder
-label_target_avg = tk.Label(root, text="Zielnotendurchschnitt (1,0-4,0):")
-label_target_avg.grid(row=0, column=0)
+# Set background color to turquoise for the whole GUI
+root.configure(bg="#f0f0f0")
+
+# Heading label
+heading_label = tk.Label(root, text="Abiturnoterechner", font=("Helvetica", 16), bg="#f0f0f0")
+heading_label.grid(row=0, column=0, columnspan=6, pady=(10, 20))  # Adjust the pady as needed
+
+# Styling
+style = ttk.Style()
+style.theme_use("clam")
+style.configure("Treeview", background="#f0f0f0", fieldbackground="#f0f0f0", foreground="#f0f0f0", font=('Helvetica', 10))
+
+# Label and Entry widgets for target average
+label_target_avg = tk.Label(root, text="Zielnotendurchschnitt (1,0-4,0):", padx=5, pady=5, bg="#f0f0f0")
+label_target_avg.grid(row=1, column=0, sticky="e")
 entry_target_avg = tk.Entry(root)
-entry_target_avg.grid(row=0, column=1)
+entry_target_avg.grid(row=1, column=1)
 
-label_lower_bound = tk.Label(root, text="Untergrenze:")
-label_lower_bound.grid(row=0, column=2)
+# Label widgets for grade boundaries
+label_lower_bound = tk.Label(root, text="Untergrenze:", padx=5, pady=5, bg="#f0f0f0")
+label_lower_bound.grid(row=1, column=2)
 
-label_upper_bound = tk.Label(root, text="Obergrenze:")
-label_upper_bound.grid(row=0, column=3)
+label_upper_bound = tk.Label(root, text="Obergrenze:", padx=5, pady=5, bg="#f0f0f0")
+label_upper_bound.grid(row=1, column=3)
 
-label_total_points = tk.Label(root, text="Gesamtpunktzahl Qualifikationsphase (0-600):")
-label_total_points.grid(row=1, column=0)
+# Label and Entry widgets for total points
+label_total_points = tk.Label(root, text="Gesamtpunktzahl Qualifikationsphase (0-600):", padx=5, pady=5, bg="#f0f0f0")
+label_total_points.grid(row=2, column=0, sticky="e")
 entry_total_points = tk.Entry(root)
-entry_total_points.grid(row=1, column=1)
+entry_total_points.grid(row=2, column=1)
 
-label_m = tk.Label(root, text="M:")
-label_m.grid(row=2, column=0)
+# Label and Entry widgets for subjects
+label_m = tk.Label(root, text="M:", padx=5, pady=5, bg="blue")
+label_m.grid(row=3, column=0, sticky="e")
 entry_m = tk.Entry(root)
-entry_m.grid(row=2, column=1)
+entry_m.grid(row=3, column=1)
+entry_m.config(fg="blue", bd=3, bg="#cce5ff")  # Setting background color for Math
 
-label_d = tk.Label(root, text="D:")
-label_d.grid(row=2, column=2)
+label_d = tk.Label(root, text="D:", padx=5, pady=5, bg="red")
+label_d.grid(row=3, column=2, sticky="e")
 entry_d = tk.Entry(root)
-entry_d.grid(row=2, column=3)
+entry_d.grid(row=3, column=3)
+entry_d.config(fg="red", bd=3, bg="#ffcccc")   # Setting background color for German
 
-label_e = tk.Label(root, text="E:")
-label_e.grid(row=2, column=4)
+label_e = tk.Label(root, text="E:", padx=5, pady=5, bg="purple")
+label_e.grid(row=3, column=4, sticky="e")
 entry_e = tk.Entry(root)
-entry_e.grid(row=2, column=5)
+entry_e.grid(row=3, column=5)
+entry_e.config(fg="purple", bd=3, bg="#ebd8ff") # Setting background color for English
 
-# Ausgabe als Tabelle
+# Treeview widget for displaying results
 treeview = ttk.Treeview(root, columns=("Gsk", "Ph"), show="headings")
 treeview.heading("Gsk", text="Gsk")
 treeview.heading("Ph", text="Ph")
-treeview.grid(row=3, column=0, columnspan=6)
+treeview.grid(row=4, column=0, columnspan=6, padx=5, pady=5)
 
-# Bind the function to the KeyRelease event of entry_target_avg
+style.configure("Treeview", background="orange", fieldbackground="orange", foreground="black", font=('Helvetica', 10))
+
+
+# Bind the function to the KeyRelease event of entry widgets
 entry_target_avg.bind("<KeyRelease>", update_grade_boundaries_on_entry)
 entry_total_points.bind("<KeyRelease>", update_grade_boundaries_on_entry)
 entry_m.bind("<KeyRelease>", update_grade_boundaries_on_entry)
