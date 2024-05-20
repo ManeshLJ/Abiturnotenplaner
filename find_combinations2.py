@@ -4,10 +4,15 @@ import csv
 import locale
 import os
 
-def get_grade_boundaries(target_avg):
+def get_csv_path():
+    # Get the directory where the script is located
     script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Construct the path to the CSV file relative to the script directory
     csv_path = os.path.join(script_dir, 'Umrechnungstabelle.csv')
-    
+    return csv_path
+
+def get_grade_boundaries(target_avg):
+    csv_path = get_csv_path()
     try:
         with open(csv_path, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
@@ -20,6 +25,10 @@ def get_grade_boundaries(target_avg):
     except Exception as e:
         print("Ein Fehler ist aufgetreten:", e)
     return None, None
+
+# Other functions remain unchanged...
+
+
 
 
 def calculate_values(m, d, e, target_avg, total_points):
@@ -207,3 +216,7 @@ entry_e.insert(0, "13")
 update_grade_boundaries_on_entry()
 
 root.mainloop()
+
+#cd C:\Users\mljab\Coding\Abiturnotenplaner
+#C:\Users\mljab\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\Scripts\pyinstaller.exe --onefile find_combinations2.py
+#C:\Users\mljab\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\Scripts\pyinstaller.exe --onefile --add-data "Umrechnungstabelle.csv;." find_combinations2.py  
