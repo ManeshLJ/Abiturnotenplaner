@@ -2,10 +2,14 @@ import tkinter as tk
 from tkinter import ttk
 import csv
 import locale
+import os
 
 def get_grade_boundaries(target_avg):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.join(script_dir, 'Umrechnungstabelle.csv')
+    
     try:
-        with open('Umrechnungstabelle.csv', newline='') as csvfile:
+        with open(csv_path, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
                 if float(row[0]) == target_avg:
@@ -17,6 +21,7 @@ def get_grade_boundaries(target_avg):
         print("Ein Fehler ist aufgetreten:", e)
     return None, None
 
+
 def calculate_values(m, d, e, target_avg, total_points):
     print("Debug: calculate_values - Inputs received:")
     print("m:", m)
@@ -26,6 +31,10 @@ def calculate_values(m, d, e, target_avg, total_points):
     print("total_points:", total_points)
 
     f, g = get_grade_boundaries(target_avg)
+    if f is None or g is None:
+        print("Debug: calculate_values - Invalid grade boundaries")
+        return [], None, None
+
     try:
         result_pairs = []
         for i in range(16):
@@ -66,8 +75,8 @@ def update_table(result_pairs):
     print("Debug: update_table - Table updated")
 
 def update_grade_boundaries(f, g):
-    label_lower_bound.config(text=f"Untergrenze: {f}")
-    label_upper_bound.config(text=f"Obergrenze: {g}")
+    label_lower_bound.config(text=f"Untergrenze: {f}" if f is not None else "Untergrenze: N/A")
+    label_upper_bound.config(text=f"Obergrenze: {g}" if g is not None else "Obergrenze: N/A")
 
 def update_grade_boundaries_on_entry(*args):
     target_avg = entry_target_avg.get()
@@ -78,7 +87,8 @@ def update_grade_boundaries_on_entry(*args):
 
     if target_avg and total_points and m and d and e:
         try:
-            locale.setlocale(locale.LC_NUMERIC, 'de_DE.UTF-8')
+            # Set locale to US to handle period as decimal separator
+            locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
             target_avg = locale.atof(target_avg)
             total_points = locale.atof(total_points)
             m = locale.atof(m)
@@ -87,16 +97,21 @@ def update_grade_boundaries_on_entry(*args):
 
             result_pairs, f, g = calculate_values(m, d, e, target_avg, total_points)
 
-            if f is not None and g is not None:
-                update_grade_boundaries(f, g)
+            if f is None or g is None:
+                feedback_label.config(text="Fehler: Umrechnungstabelle.csv fehlt oder Zielnotendurchschnitt nicht gefunden.", fg="red")
+            else:
+                feedback_label.config(text="Notengrenzen aktualisiert.", fg="green")
 
+            update_grade_boundaries(f, g)
             update_table(result_pairs)
 
             print("Notengrenzen aktualisiert für den Ziel-Notendurchschnitt:", target_avg)
         except ValueError:
+            feedback_label.config(text="Fehlerhafte Eingaben. Bitte überprüfen.", fg="red")
             pass  # Ignore faulty inputs
     else:
         update_table([])  # Clear the table if inputs are incomplete
+        feedback_label.config(text="Bitte alle Felder ausfüllen.", fg="red")
 
 # GUI initialisieren
 root = tk.Tk()
@@ -117,7 +132,7 @@ style.configure("Treeview", background="#f0f0f0", fieldbackground="#f0f0f0", for
 style.map('Treeview', background=[('selected', '#FFD700')], foreground=[('selected', '#000000')])
 
 # Label and Entry widgets for target average
-label_target_avg = tk.Label(root, text="Zielnotendurchschnitt (1,0-4,0):", padx=5, pady=5, bg="#f0f0f0", font=('Helvetica', 10))
+label_target_avg = tk.Label(root, text="Zielnotendurchschnitt (1.0-4.0):", padx=5, pady=5, bg="#f0f0f0", font=('Helvetica', 10))
 label_target_avg.grid(row=1, column=0, sticky="e", padx=(10, 5))
 entry_target_avg = tk.Entry(root)
 entry_target_avg.grid(row=1, column=1, padx=(0, 10))
@@ -163,6 +178,10 @@ treeview.grid(row=4, column=0, columnspan=6, padx=10, pady=(20, 10), sticky="nse
 style.configure("Treeview", background="#ffffff", fieldbackground="#ffffff", foreground="#000000", font=('Helvetica', 10))
 style.map("Treeview", background=[("selected", "#0078D7")], foreground=[("selected", "#ffffff")])
 
+# Feedback label for errors and status updates
+feedback_label = tk.Label(root, text="", padx=5, pady=5, bg="#f0f0f0", font=('Helvetica', 10), fg="red")
+feedback_label.grid(row=5, column=0, columnspan=6)
+
 # Configure column weights for resizing
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
@@ -178,5 +197,13 @@ entry_total_points.bind("<KeyRelease>", update_grade_boundaries_on_entry)
 entry_m.bind("<KeyRelease>", update_grade_boundaries_on_entry)
 entry_d.bind("<KeyRelease>", update_grade_boundaries_on_entry)
 entry_e.bind("<KeyRelease>", update_grade_boundaries_on_entry)
+
+# Assign default values and trigger the calculation
+entry_target_avg.insert(0, "1.2")
+entry_total_points.insert(0, "525")
+entry_m.insert(0, "13")
+entry_d.insert(0, "13")
+entry_e.insert(0, "13")
+update_grade_boundaries_on_entry()
 
 root.mainloop()
